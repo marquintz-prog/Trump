@@ -1,4 +1,4 @@
-const pool = require('./db');
+import pool from './db.js';
 
 async function testarBanco() {
     try {
@@ -6,9 +6,12 @@ async function testarBanco() {
             'SELECT * FROM equipamentos'
         );
 
-        console.log(resultado.rows);
+        console.log('Equipamentos cadastrados:');
+        console.table(resultado.rows);
+
     } catch (erro) {
         console.error('Erro ao consultar o banco:', erro);
+
     } finally {
         await pool.end();
     }
