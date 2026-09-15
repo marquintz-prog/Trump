@@ -7,57 +7,117 @@ const service = new EquipmentService();
 
 // Listar todos os equipamentos
 router.get('/equipamentos', async (req, res) => {
-    const equipamentos = await service.listarTodos();
+    try {
+        const equipamentos = await service.listarTodos();
 
-    res.json(equipamentos);
-});
+        res.status(200).json(equipamentos);
+    } catch (erro) {
+        console.error(erro);
 
-// Buscar equipamento pelo ID
-router.get('/equipamentos/:id', async (req, res) => {
-    const id = Number(req.params.id);
-
-    const equipamento = await service.buscarPorId(id);
-
-    if (!equipamento) {
-        return res.status(404).json({
-            mensagem: 'Equipamento não encontrado'
+        res.status(500).json({
+            erro: 'Erro interno do servidor'
         });
     }
+});
 
-    res.json(equipamento);
+// Buscar equipamento por ID
+router.get('/equipamentos/:id', async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({
+                erro: 'O identificador deve ser um número inteiro positivo'
+            });
+        }
+
+        const equipamento = await service.buscarPorId(id);
+
+        if (!equipamento) {
+            return res.status(404).json({
+                erro: 'Equipamento não encontrado'
+            });
+        }
+
+        res.status(200).json(equipamento);
+    } catch (erro) {
+        console.error(erro);
+
+        res.status(500).json({
+            erro: 'Erro interno do servidor'
+        });
+    }
 });
 
 // Cadastrar equipamento
 router.post('/equipamentos', async (req, res) => {
-    const { nome, categoria, condicao, disponivel } = req.body;
+    try {
+        const { nome, categoria, condicao, disponivel } = req.body;
 
-    const equipamento = await service.cadastrar(
-        nome,
-        categoria,
-        condicao,
-        disponivel
-    );
+        if (
+            !nome ||
+            !categoria ||
+            typeof disponivel !== 'boolean'
+        ) {
+            return res.status(400).json({
+                erro: 'Nome, categoria e disponibilidade são obrigatórios'
+            });
+        }
 
-    res.status(201).json(equipamento);
+        const equipamento = await service.cadastrar(
+            nome,
+            categoria,
+            condicao,
+            disponivel
+        );
+
+        res.status(201).json(equipamento);
+    } catch (erro) {
+        console.error(erro);
+
+        res.status(500).json({
+            erro: 'Erro interno do servidor'
+        });
+    }
 });
 
 // Alterar somente a disponibilidade
 router.patch('/equipamentos/:id/disponibilidade', async (req, res) => {
-    const id = Number(req.params.id);
-    const { disponivel } = req.body;
+    try {
+        const id = Number(req.params.id);
+        const { disponivel } = req.body;
 
-    const equipamento = await service.alterarDisponibilidade(
-        id,
-        disponivel
-    );
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({
+                erro: 'O identificador deve ser um número inteiro positivo'
+            });
+        }
 
-    if (!equipamento) {
-        return res.status(404).json({
-            mensagem: 'Equipamento não encontrado'
+        if (typeof disponivel !== 'boolean') {
+            return res.status(400).json({
+                erro: 'O campo disponivel deve ser booleano'
+            });
+        }
+
+        const equipamento = await service.alterarDisponibilidade(
+            id,
+            disponivel
+        );
+
+        if (!equipamento) {
+            return res.status(404).json({
+                erro: 'Equipamento não encontrado'
+            });
+        }
+
+        res.status(200).json(equipamento);
+    } catch (erro) {
+        console.error(erro);
+
+        res.status(500).json({
+            erro: 'Erro interno do servidor'
         });
     }
-
-    res.json(equipamento);
 });
 
 export default router;
